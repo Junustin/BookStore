@@ -1,0 +1,33 @@
+@BookStore.Api_HostAddress = http://localhost:5160
+
+###
+GET http://localhost:5160/api/books
+
+###
+GET  http://localhost:5160/api/books/5
+
+###
+POST http://localhost:5160/api/books
+Content-Type: application/json
+
+{
+    "title": "Test3",
+    "author":"TestAuthor3",
+    "price": 15.50,
+    "stockQty": 15
+}
+
+###
+PUT http://localhost:5160/api/books/1
+Content-Type: application/json
+
+{
+    "title": "TestNew",
+    "author": "TestNewAuthor",
+    "price": "15.50",
+    "stockQty": "5"
+}
+
+### 
+DELETE http://localhost:5160/api/books/4
+
