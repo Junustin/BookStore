@@ -14,17 +14,17 @@ public static class BookEndpoints
         // GET /api/books
         group.MapGet("/", async (BookStoreDbContext context) =>
         {
-             return await context.Books
-            .AsNoTracking()
-            .Select(b => new BookDto(
-                b.Id,
-                b.Title,
-                b.Author,
-                b.Price,
-                b.StockQty,
-                b.CreateAt
-            ))
-            .ToListAsync(); 
+            return await context.Books
+           .AsNoTracking()
+           .Select(b => new BookDto(
+               b.Id,
+               b.Title,
+               b.Author,
+               b.Price,
+               b.StockQty,
+               b.CreateAt
+           ))
+           .ToListAsync();
         });
 
         // GET /api/books/{id}
@@ -34,7 +34,7 @@ public static class BookEndpoints
 
             if(book is null)
             {
-                return Results.NotFound($"Book with ID:{id} not found");
+                return Results.NotFound($"Book with ID:{id} was not found");
             }
             // Create BookDto to return
             BookDto bookDto = new BookDto(
