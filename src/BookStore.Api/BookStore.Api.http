@@ -11,10 +11,10 @@ POST http://localhost:5160/api/books
 Content-Type: application/json
 
 {
-    "title": "Test3",
-    "author":"TestAuthor3",
-    "price": 15.50,
-    "stockQty": 15
+    "title": "ffhd",
+    "author":"Ham",
+    "price": 1,
+    "stockQty": 0
 }
 
 ###
@@ -22,8 +22,8 @@ PUT http://localhost:5160/api/books/1
 Content-Type: application/json
 
 {
-    "title": "TestNew",
-    "author": "TestNewAuthor",
+    "title": "Ha",
+    "author": "yes",
     "price": "15.50",
     "stockQty": "5"
 }

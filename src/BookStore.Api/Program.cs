@@ -15,6 +15,9 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<BookStoreDbContext>(options =>
     options.UseSqlite(connectionString));
 
+// Add input validation service
+builder.Services.AddValidation();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
