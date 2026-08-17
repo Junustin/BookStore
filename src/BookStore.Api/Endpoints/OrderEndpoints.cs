@@ -1,7 +1,6 @@
 using BookStore.Api.Data;
 using BookStore.Api.Entities;
 using BookStore.Shared;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 namespace BookStore.Api.Endpoints;
