@@ -1,4 +1,4 @@
-namespace BookStore.Shared;
+namespace BookStore.Shared.Dtos;
 
 public record OrderDto(
     int Id,
