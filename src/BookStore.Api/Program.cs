@@ -8,6 +8,16 @@ var builder = WebApplication.CreateBuilder(args);
 // Register OpenAPI
 builder.Services.AddOpenApi();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowBlazorClient", policy =>
+    {
+        policy.AllowAnyOrigin()
+        .AllowAnyHeader()
+        .AllowAnyMethod();
+    });
+});
+
 // Get Connection string frrom appsettings.json
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
@@ -20,6 +30,8 @@ builder.Services.AddValidation();
 
 var app = builder.Build();
 
+app.UseCors("AllowBlazorClient");
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -29,6 +41,6 @@ if (app.Environment.IsDevelopment())
 app.MapBookEndpoints();
 app.MapOrderEndpoints();
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 app.Run();
