@@ -133,3 +133,4 @@ $RECYCLE.BIN/
 _NCrunch*
 src/BookStore.Api/bookstore.db
 src/BookStore.Api/bookstore.db-wal
+src/BookStore.Api/bookstore.db-shm
