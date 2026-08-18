@@ -1,0 +1,40 @@
+@page "/orders"
+@using BookStore.Client.Services
+@using BookStore.Shared
+
+@inject OrderApiClient ApiClient
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h5" Class="mb-4">Order reciepts</MudText>
+<MudDataGrid Items="@_orders" Loading="@_loading" Hover="true" Striped="true">
+    <Columns>
+        <PropertyColumn Property="x => x.Id" Title="Order #" />
+        <PropertyColumn Property="x => x.OrderDate" Title="Date & Time" Format="g" />
+        <PropertyColumn Property="x => x.StaffName" Title="Staff name" />
+        <TemplateColumn Title="Total">
+            <CellTemplate>
+                <MudChip T="string" Color="Color.Success" Size="Size.Small">
+                    @context.Item.TotalPrice.ToString("C2")
+                </MudChip>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+</MudDataGrid>
+
+@code{
+    private List<OrderDto> _orders = [];
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrders();
+    }
+
+    private async Task LoadOrders()
+    {
+        _loading = true;
+        _orders = await ApiClient.GetOrdersAsync();
+        Snackbar.Add("Get orders list successfully", Severity.Success);
+        _loading = false;
+    }
+}

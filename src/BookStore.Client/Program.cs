@@ -10,6 +10,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5160") });
 builder.Services.AddScoped<BookApiClient>();
+builder.Services.AddScoped<OrderApiClient>();
 
 builder.Services.AddMudServices();
 
