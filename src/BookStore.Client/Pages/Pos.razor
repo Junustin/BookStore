@@ -1,0 +1,279 @@
+@page "/pos"
+@using BookStore.Client.Services
+@using BookStore.Client.Models
+@using BookStore.Shared.Dtos
+@using BookStore.Shared
+
+@inject BookApiClient BookApiClient
+@inject OrderApiClient OrderApiClient
+@inject ISnackbar Snackbar
+<MudGrid>
+    @* Left Panel: Book in catalog*@
+    <MudItem xs="12" md="7">
+        <MudCard Elevation="2">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Available Books</MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudTextField @bind-Value="_searchString" 
+                                Placeholder="Search title or author..." 
+                                Adornment="Adornment.Start" 
+                                AdornmentIcon="@Icons.Material.Filled.Search" 
+                                IconSize="Size.Medium" 
+                                Class="mt-0" 
+                                Immediate="true" />
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudTable Items="@_books" 
+                        Filter="new Func<BookDto,bool>(FilterBook)" 
+                        Loading="@_loading" 
+                        Hover="true" 
+                        Dense="true" 
+                        Elevation="0">
+                    <HeaderContent>
+                        <MudTh>Title</MudTh>
+                        <MudTh>Price</MudTh>
+                        <MudTh>Stock</MudTh>
+                        <MudTh Style="text-align:right">Action</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Title">
+                            <MudText Typo="Typo.body2"><b>@context.Title</b></MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Author</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Price">@context.Price.ToString("C2")</MudTd>
+                        <MudTd DataLabel="Stock">
+                            @if (context.StockQty > 0)
+                            {
+                                <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Text">
+                                    @context.StockQty in stock
+                                </MudChip>
+                            }
+                            else
+                            {
+                                <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Text">
+                                    Out of Stock
+                                </MudChip>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Action" Style="text-align:right">
+                            <MudButton Variant="Variant.Filled" 
+                                    Color="Color.Primary" 
+                                    Size="Size.Small" 
+                                    StartIcon="@Icons.Material.Filled.AddShoppingCart" 
+                                    Disabled="@(context.StockQty <= 0)" 
+                                    OnClick="@(() => AddToCart(context))">
+                                Add
+                            </MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    @* Right Panel: Current Order Cart*@
+    <MudItem xs="12" md="5">
+        <MudCard Elevation="2">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Current Order</MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudIconButton Icon="@Icons.Material.Filled.DeleteSweep" 
+                                Color="Color.Error" 
+                                Disabled="@(_cart.Count == 0)" 
+                                OnClick="@(() => _cart.Clear())" 
+                                Title="Clear Cart" />
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (_cart.Count == 0)
+                {
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="my-2">
+                        Cart is empty. Select books from the left panel to begin.
+                    </MudAlert>
+                }
+                else
+                {
+                    @* Cart items list & checkout controls *@
+                    <MudList T="string" Clickable="false">
+                        @foreach (var item in _cart)
+                        {
+                            <MudListItem>
+                                <div class="d-flex align-center justify-space-between w-100">
+                                    <div>
+                                        <MudText Typo="Typo.subtitle2">@item.Title</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                            @item.Price.ToString("C2") x @item.Quantity = <b>@item.Subtotal.ToString("C2")</b>
+                                        </MudText>
+                                    </div>
+                                    <div class="d-flex align-center">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Remove" Size="Size.Small" Color="Color.Error"
+                                                    OnClick="@(() => UpdateQuantity(item, -1))" />
+
+                                        <MudText Typo="Typo.body2" Class="mx-2"><b>@item.Quantity</b></MudText>
+
+                                        <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Color="Color.Success"
+                                                    Disabled="@(item.Quantity >= item.AvailableStock)"
+                                                    OnClick="@(() => UpdateQuantity(item, +1))" />
+
+                                        <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" Color="Color.Default"
+                                                    Class="ml-2" OnClick="@(() => RemoveFromCart(item))" />
+                                    </div>
+                                </div>
+                            </MudListItem>
+                            <MudDivider />
+                        }
+                    </MudList>
+                    <MudDivider Class="my-3" />
+                    <div class="d-flex justify-space-between align-center mb-4">
+                        <MudText Typo="Typo.h6">Total Amount:</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Primary">
+                            <b>@GrandTotal.ToString("C2")</b>
+                        </MudText>
+                    </div>
+
+                    <MudTextField @bind-Value="_staffName" Label="Staff Name / ID" Variant="Variant.Outlined"
+                                Margin="Margin.Dense" Required="true" Class="mb-3" />
+
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true" Size="Size.Large"
+                            Disabled="@(_cart.Count == 0 || string.IsNullOrWhiteSpace(_staffName) || _isSubmitting)"
+                            OnClick="CompleteOrder">
+                        @if (_isSubmitting)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                            <span>Processing...</span>
+                        }
+                        else
+                        {
+                            <span>Complete Checkout (@GrandTotal.ToString("C2"))</span>
+                        }
+                    </MudButton>
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+ 
+@code{
+    private List<BookDto> _books = [];
+    private List<CartItem> _cart = [];
+    private string _staffName = String.Empty;
+    private bool _loading = true;
+    private bool _isSubmitting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBooks();
+    }
+
+     private async Task LoadBooks()
+    {
+        _loading = true;
+        _books = await BookApiClient.GetBooksAsync();
+        _loading = false;
+    }
+
+    private void AddToCart(BookDto book){
+        if(book.StockQty <= 0){
+            Snackbar.Add($"'{book.Title}' is out of stock!", Severity.Warning);
+            return;
+        }
+        // If has same book id in the cart already add quantity
+        var existingItem = _cart.FirstOrDefault(c => c.BookId == book.Id);
+        if(existingItem is not null){
+            if(existingItem.Quantity < book.StockQty){
+                existingItem.Quantity ++;
+            }
+            else{
+                Snackbar.Add($"Cannot exceed available stock ({book.StockQty}).", Severity.Warning);
+            }
+        }
+        // Add book to cart
+        else{ 
+            _cart.Add(new CartItem{
+                BookId = book.Id,
+                Title = book.Title,
+                Price = book.Price,
+                AvailableStock = book.StockQty,
+                Quantity = 1
+            });
+        }
+    }
+
+    private void UpdateQuantity(CartItem item, int change)
+    {
+        int newQuantity = item.Quantity + change;
+        // If quantity is <= 0 remove from cart
+        if (newQuantity <= 0)
+        {
+            _cart.Remove(item);
+        }
+        else if (newQuantity <= item.AvailableStock)
+        {
+            item.Quantity = newQuantity;
+        }
+        // If new quantity exceed stock
+        else
+        {
+            Snackbar.Add($"Only {item.AvailableStock} copies available.", Severity.Warning);
+        }
+    }
+
+    private void RemoveFromCart(CartItem item) => _cart.Remove(item);
+
+    // Total price for display in Web GUI
+    private decimal GrandTotal => _cart.Sum(x => x.Subtotal);
+    private async Task CompleteOrder(){
+
+        // Check staff name
+        if (string.IsNullOrWhiteSpace(_staffName))
+        {
+            Snackbar.Add("Please enter staff name before checkout.", Severity.Warning);
+            return;
+        }
+
+        // Prevent empty cart
+        if (_cart.Count == 0) return;
+        
+        // Start submitting order in cart
+        _isSubmitting = true;
+
+        // Create Order item list from cart
+        var items = _cart.Select(c => new OrderItemRequestDto(c.BookId, c.Quantity)).ToList();
+
+        // Create Order using staff name and order item list
+        var dto = new CreateOrderDto(_staffName, items);
+
+        // Create order and get response
+        var response = await OrderApiClient.CreateOrderAsync(dto);
+
+        // If create order is successfully notify user and clear cart
+        if(response.IsSuccess){
+            Snackbar.Add("Order completed successfully!", Severity.Success);
+            _cart.Clear();
+            await LoadBooks();
+        }
+        else
+             Snackbar.Add(response.ErrorMessage ?? "Order submission failed.", Severity.Error);
+
+        _isSubmitting = false;
+    }
+
+    private string _searchString = string.Empty;
+
+    private bool FilterBook(BookDto book){
+        if(string.IsNullOrWhiteSpace(_searchString)){
+            return true;
+        }
+
+        return book.Title.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                book.Author.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }
+
+
+
+}

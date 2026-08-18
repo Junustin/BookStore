@@ -23,7 +23,7 @@
         <PropertyColumn Property="x => x.Title" Title="Title" />
         <PropertyColumn Property="x => x.Author" Title="Author" />
         <PropertyColumn Property="x => x.Price" Title="Price" Format="C2" />
-        <PropertyColumn Property="x => x.StockQty" Title="Stock" />
+        <PropertyColumn Property="x => x.StockQty" Title="Stock" CellStyleFunc="@(x => x.StockQty > 0 ? "Color: green; font-weight: bold;": "Color: red; font-weight: bold;")"/>
         <TemplateColumn CellClass="d-flex justify-end">
             <CellTemplate>
                 <MudIconButton Icon="@Icons.Material.Filled.Edit" 

@@ -1,6 +1,6 @@
 using BookStore.Api.Data;
 using BookStore.Api.Entities;
-using BookStore.Shared;
+using BookStore.Shared.Dtos;
 using Microsoft.EntityFrameworkCore;
 
 namespace BookStore.Api.Endpoints;
@@ -86,7 +86,7 @@ public static class OrderEndpoints
                 // Create new Order
                 var order = new Order
                 {
-                    OrderDate = DateTime.UtcNow,
+                    // Datetime handle by Order Class => DateTime.Now;
                     TotalPrice = calculatedTotal,
                     StaffName = dto.StaffName
                 };
