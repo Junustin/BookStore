@@ -1,0 +1,62 @@
+﻿@using BookStore.Shared.Dtos
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_success">
+            <MudTextField T="string" Label="Title" @bind-Value="Title" 
+                          Required="true" RequiredError="Title is required" />
+            <MudTextField T="string" Label="Author" @bind-Value="Author" 
+                          Required="true" RequiredError="Author is required" />
+            <MudNumericField T="decimal" Label="Price" @bind-Value="Price" 
+                             Min="0.01m" Format="N2" />
+            <MudNumericField T="int" Label="Stock Quantity" @bind-Value="StockQty" 
+                             Min="0" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public BookDto? BookToEdit { get; set; }
+
+    private MudForm _form = default!;
+    private bool _success;
+
+    public string Title { get; set; } = string.Empty;
+    public string Author { get; set; } = string.Empty;
+    public decimal Price { get; set; } = 10.00m;
+    public int StockQty { get; set; } = 1;
+
+    protected override void OnInitialized()
+    {
+        if (BookToEdit is not null)
+        {
+            Title = BookToEdit.Title;
+            Author = BookToEdit.Author;
+            Price = BookToEdit.Price;
+            StockQty = BookToEdit.StockQty;
+        }
+    }
+
+    private void Submit()
+    {
+        _form.ValidateAsync();
+        if (!_success) return;
+
+        if (BookToEdit is null)
+        {
+            MudDialog.Close(DialogResult.Ok(result: new CreateBookDto(Title, Author, Price, StockQty)));
+        }
+        else
+        {
+            MudDialog.Close(DialogResult.Ok(result: new UpdateBookDto(Title, Author, Price, StockQty)));
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

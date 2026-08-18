@@ -1,0 +1,108 @@
+@page "/books"
+@using BookStore.Client.Services
+@using BookStore.Client.Components
+@inject BookApiClient ApiClient
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h5" Class="mb-4">Book Inventory</MudText>
+
+<MudDataGrid Items="@_books" Loading="@_loading" Hover="true" Striped="true">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Books</MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.Add" 
+                   OnClick="OpenCreateDialog">
+            Add Book
+        </MudButton>
+    </ToolBarContent>
+    <Columns>
+        <PropertyColumn Property="x => x.Id" Title="ID" />
+        <PropertyColumn Property="x => x.Title" Title="Title" />
+        <PropertyColumn Property="x => x.Author" Title="Author" />
+        <PropertyColumn Property="x => x.Price" Title="Price" Format="C2" />
+        <PropertyColumn Property="x => x.StockQty" Title="Stock" />
+        <TemplateColumn CellClass="d-flex justify-end">
+            <CellTemplate>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                               Color="Color.Info" 
+                               OnClick="@(() => OpenEditDialog(context.Item))" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                               Color="Color.Error" 
+                               OnClick="@(() => DeleteBook(context.Item))" />
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+</MudDataGrid>
+
+@code {
+    private List<BookDto> _books = [];
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBooks();
+    }
+
+    private async Task LoadBooks()
+    {
+        _loading = true;
+        _books = await ApiClient.GetBooksAsync();
+        _loading = false;
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var dialog = await DialogService.ShowAsync<BookDialog>("Add New Book");
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: CreateBookDto dto })
+        {
+            var success = await ApiClient.CreateBookAsync(dto);
+            if (success)
+            {
+                Snackbar.Add("Book added successfully!", Severity.Success);
+                await LoadBooks();
+            }
+        }
+    }
+
+    private async Task OpenEditDialog(BookDto book)
+    {
+        var parameters = new DialogParameters<BookDialog> { { x => x.BookToEdit, book } };
+        var dialog = await DialogService.ShowAsync<BookDialog>("Edit Book", parameters);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: UpdateBookDto dto })
+        {
+            var success = await ApiClient.UpdateBookAsync(book.Id, dto);
+            if (success)
+            {
+                Snackbar.Add("Book updated successfully!", Severity.Success);
+                await LoadBooks();
+            }
+        }
+    }
+
+    private async Task DeleteBook(BookDto book)
+    {
+        bool? confirm = await DialogService.ShowMessageBoxAsync(
+            "Confirm Delete", 
+            $"Are you sure you want to delete '{book.Title}'?", 
+            yesText: "Delete", 
+            cancelText: "Cancel"
+        );
+
+        if (confirm == true)
+        {
+            var success = await ApiClient.DeleteBookAsync(book.Id);
+            if (success)
+            {
+                Snackbar.Add("Book deleted successfully!", Severity.Success);
+                await LoadBooks();
+            }
+        }
+    }
+}
