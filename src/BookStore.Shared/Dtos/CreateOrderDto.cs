@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace BookStore.Shared;
+namespace BookStore.Shared.Dtos;
 
 public record CreateOrderDto(
 
