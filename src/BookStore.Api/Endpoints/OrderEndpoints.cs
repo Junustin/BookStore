@@ -14,15 +14,22 @@ public static class OrderEndpoints
         // GET api/orders
         group.MapGet("/", async (BookStoreDbContext context) =>
         {
-            return await context.Orders
+            var orders = await context.Orders
             .AsNoTracking()
             .Select(o => new OrderDto(
                 o.Id,
-                 o.OrderDate,
-                 o.TotalPrice,
-                 o.StaffName
+                o.OrderDate,
+                o.TotalPrice,
+                o.StaffName,
+                o.Items.Select(i => new OrderItemDto(
+                    i.BookId,
+                    i.Quantity,
+                    i.UnitPrice
+                )).ToList()
             ))
             .ToListAsync();
+
+            return Results.Ok(orders);
         });
             
         // GET api/orders/{id}
@@ -39,7 +46,12 @@ public static class OrderEndpoints
                 order.Id,
                 order.OrderDate,
                 order.TotalPrice,
-                order.StaffName
+                order.StaffName,
+                order.Items.Select(i => new OrderItemDto(
+                    i.BookId,
+                    i.Quantity,
+                    i.UnitPrice
+                )).ToList()
             );
 
             return Results.Ok(orderDto);
@@ -61,7 +73,15 @@ public static class OrderEndpoints
             {
                 decimal calculatedTotal = 0M;
 
-                foreach(var item in dto.Items)
+                var order = new Order
+                {
+                    StaffName = dto.StaffName,
+                    Items = new List<OrderItem>()
+                };
+
+                var responseItems = new List<OrderItemDto>();
+
+                foreach (var item in dto.Items)
                 {
                     // Fetch book from database
                     var book = await context.Books.FindAsync(item.BookId);
@@ -80,16 +100,31 @@ public static class OrderEndpoints
 
                     // Deduct stock and add calculate total price
                     book.StockQty -= item.Quantity;
+
+                    // Snapshot price
+                    decimal unitPrice = book.Price;
                     calculatedTotal += book.Price * item.Quantity;
+
+                    // Create new OrderItem
+                    var orderItem = new OrderItem
+                    {
+                        BookId = book.Id,
+                        Quantity = item.Quantity,
+                        UnitPrice = unitPrice
+                    };
+
+                    order.Items.Add(orderItem);
+
+                    // Create new response order item dto
+                    responseItems.Add(new OrderItemDto(
+                        book.Id,
+                        item.Quantity,
+                        unitPrice
+                    ));
                 }
 
-                // Create new Order
-                var order = new Order
-                {
-                    // Datetime handle by Order Class => DateTime.Now;
-                    TotalPrice = calculatedTotal,
-                    StaffName = dto.StaffName
-                };
+                // Add property to Order
+                order.TotalPrice = calculatedTotal;
 
                 // Add Order
                 context.Orders.Add(order);
@@ -103,7 +138,8 @@ public static class OrderEndpoints
                     order.Id,
                     order.OrderDate,
                     order.TotalPrice,
-                    order.StaffName
+                    order.StaffName,
+                    responseItems
                 );
 
                 return Results.CreatedAtRoute("GetOrderById", new {id = order.Id}, responseDto);
