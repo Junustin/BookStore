@@ -23,6 +23,7 @@ public static class OrderEndpoints
                 o.StaffName,
                 o.Items.Select(i => new OrderItemDto(
                     i.BookId,
+                    i.BookTitle!,
                     i.Quantity,
                     i.UnitPrice
                 )).ToList()
@@ -49,6 +50,7 @@ public static class OrderEndpoints
                 order.StaffName,
                 order.Items.Select(i => new OrderItemDto(
                     i.BookId,
+                    i.BookTitle!,
                     i.Quantity,
                     i.UnitPrice
                 )).ToList()
@@ -61,6 +63,7 @@ public static class OrderEndpoints
         // POST api/orders/OrderDto
         group.MapPost("/", async (CreateOrderDto dto, BookStoreDbContext context) =>
         {
+            // If dto are empty or has no Item
             if(dto.Items == null || dto.Items.Count == 0)
             {
                 return Results.BadRequest("Order must contain at least one item.");
@@ -81,11 +84,13 @@ public static class OrderEndpoints
 
                 var responseItems = new List<OrderItemDto>();
 
+                // Loop throught item in dto
                 foreach (var item in dto.Items)
                 {
                     // Fetch book from database
                     var book = await context.Books.FindAsync(item.BookId);
-
+                    
+                    // Boot not found return
                     if(book is null)
                     {
                         return Results.BadRequest($"Book with ID:{item.BookId} was not found");
@@ -98,10 +103,10 @@ public static class OrderEndpoints
                         ); 
                     }
 
-                    // Deduct stock and add calculate total price
+                    // Deduct stock 
                     book.StockQty -= item.Quantity;
 
-                    // Snapshot price
+                    // Snapshot price and total price for this item
                     decimal unitPrice = book.Price;
                     calculatedTotal += book.Price * item.Quantity;
 
@@ -109,6 +114,7 @@ public static class OrderEndpoints
                     var orderItem = new OrderItem
                     {
                         BookId = book.Id,
+                        BookTitle = book.Title,
                         Quantity = item.Quantity,
                         UnitPrice = unitPrice
                     };
@@ -118,6 +124,7 @@ public static class OrderEndpoints
                     // Create new response order item dto
                     responseItems.Add(new OrderItemDto(
                         book.Id,
+                        book.Title,
                         item.Quantity,
                         unitPrice
                     ));

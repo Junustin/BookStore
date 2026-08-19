@@ -8,6 +8,7 @@ public record CreateOrderDto(
     [Required(ErrorMessage = "Staff name is required")]
     string StaffName,
     
+    // Book id and Quantity
     List<OrderItemRequestDto> Items
 );
 

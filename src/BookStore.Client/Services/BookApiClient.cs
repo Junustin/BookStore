@@ -8,7 +8,7 @@ public class BookApiClient(HttpClient httpClient)
 {
     public async Task<List<BookDto>> GetBooksAsync()=>
         await httpClient.GetFromJsonAsync<List<BookDto>>("api/books") ?? [];
-
+        
     public async Task<bool> CreateBookAsync(CreateBookDto dto)
     {
         var response = await httpClient.PostAsJsonAsync("api/books", dto);

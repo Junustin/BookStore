@@ -5,12 +5,6 @@ public record OrderDto(
     DateTime OrderDate,
     decimal TotalPrice,
     string StaffName,
+    // BookId, Quantiy, UnitPrice
     List<OrderItemDto> OrderItems
-);
-
-// Use to display detail of book in order detail (receipt)
-public record OrderItemDto(
-    int BookId,
-    int Quantity,
-    decimal UnitPrice
 );

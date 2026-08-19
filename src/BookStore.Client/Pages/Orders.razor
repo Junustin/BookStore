@@ -2,23 +2,57 @@
 @using BookStore.Client.Services
 @using BookStore.Shared.Dtos
 
-@inject OrderApiClient ApiClient
+@inject BookApiClient BookApiClient
+@inject OrderApiClient OrderApiClient
 @inject ISnackbar Snackbar
 
 <MudText Typo="Typo.h5" Class="mb-4">Order reciepts</MudText>
 <MudDataGrid Items="@_orders" Loading="@_loading" Hover="true" Striped="true">
     <Columns>
-        <PropertyColumn Property="x => x.Id" Title="Order #" />
-        <PropertyColumn Property="x => x.OrderDate" Title="Date & Time" Format="g" />
-        <PropertyColumn Property="x => x.StaffName" Title="Staff name" />
-        <TemplateColumn Title="Total">
-            <CellTemplate>
-                <MudChip T="string" Color="Color.Success" Size="Size.Small">
-                    @context.Item.TotalPrice.ToString("C2")
-                </MudChip>
-            </CellTemplate>
-        </TemplateColumn>
+        @*Expand/Collapse Arrow Column*@
+        <HierarchyColumn T="OrderDto" />
+            <PropertyColumn Property="x => x.Id" Title="Order ID" />
+            <PropertyColumn Property="x => x.OrderDate" Title="Date & Time" Format="g" />
+            <PropertyColumn Property="x => x.StaffName" Title="Staff name" />
+            <TemplateColumn Title="Total">
+                <CellTemplate>
+                    <MudChip T="string" Color="Color.Success" Size="Size.Small">
+                        @context.Item.TotalPrice.ToString("C2")
+                    </MudChip>
+                </CellTemplate>
+            </TemplateColumn>
     </Columns>
+
+    <ChildRowContent>
+        <MudCard Elevation="0" Class="pa-4 my-2" Style="background-color: var(--mud-palette-background-grey);">
+            <MudText Typo="Typo.subtitle2" Class="mb-2" Color="Color.Primary">
+                Item in Order #@context.Item.Id
+            </MudText>
+            @if(context.Item.OrderItems == null || !context.Item.OrderItems.Any()){
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    No items found for this order.
+                </MudText>
+            }
+            else{
+                <MudTable Items="@context.Item.OrderItems" Context="item" Dense="true" Elevation="0" Outlined="true">
+                    <HeaderContent>
+                        <MudTh>Book ID</MudTh>
+                        <MudTh Align="Align.Right">Book Title</MudTh>
+                        <MudTh Align="Align.Right">Qty</MudTh>
+                        <MudTh Align="Align.Right">Unit Price</MudTh>
+                        <MudTh Align="Align.Right">Subtotal</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Book ID">@item.BookId</MudTd>
+                        <MudTd DataLabel="Book Title">@CheckBookTitle(item)</MudTd>
+                        <MudTd DataLabel="Qty" Align="Align.Right">@item.Quantity</MudTd>
+                        <MudTd DataLabel="Unit Price" Align="Align.Right">@item.UnitPrice.ToString("C2")</MudTd>
+                        <MudTd DataLabel="Subtotal" Align="Align.Right">@((item.Quantity * item.UnitPrice).ToString("C2"))</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudCard>
+    </ChildRowContent>
 </MudDataGrid>
 
 @code{
@@ -33,8 +67,21 @@
     private async Task LoadOrders()
     {
         _loading = true;
-        _orders = await ApiClient.GetOrdersAsync();
+        _orders = await OrderApiClient.GetOrdersAsync();
         Snackbar.Add("Get orders list successfully", Severity.Success);
         _loading = false;
+    }
+
+    /// <summary>
+    /// For check title if null return "Missing title" instead of null.
+    /// </summary>
+    /// <param name="itemDto"></param>
+    /// <returns></returns>
+    private string CheckBookTitle(OrderItemDto itemDto){
+        if(itemDto.BookTitle is null){
+            return "Missing title";
+        }
+        else
+            return itemDto.BookTitle;
     }
 }
