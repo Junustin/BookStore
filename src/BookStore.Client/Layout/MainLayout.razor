@@ -1,7 +1,7 @@
 ﻿@inherits LayoutComponentBase
 
 @* Required *@
-<MudThemeProvider />
+<MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_customTheme" />
 <MudPopoverProvider />
 
 @* Needed for dialogs *@
@@ -12,18 +12,19 @@
 
 <MudLayout>
     @* Top App Bar with Drawer Toggle Button *@
-    <MudAppBar Elevation="1">
+    <MudAppBar Elevation="1" Color="Color.Surface">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" 
                        Color="Color.Inherit" 
                        Edge="Edge.Start" 
                        OnClick="@DrawerToggle" />
         <MudText Typo="Typo.h6" Class="ml-3">BookStore System</MudText>
+        <MudSwitch @bind-Value="_isDarkMode" Color="Color.Primary" Class="ma-4" T="bool" Label="Dark Mode"/>
     </MudAppBar>
 
     @* Side Navigation Drawer *@
-    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="4">
         <MudNavMenu>
-            <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="px-4 pt-4">NAVIGATION</MudText>
+            <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="px-4 pt-4" sp>NAVIGATION</MudText>
             
             <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">
                 Dashboard
@@ -53,9 +54,58 @@
 
 @code {
     private bool _drawerOpen = true;
+    private bool _isDarkMode = true;
 
     private void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
     }
+
+    // Theme Definition
+    private readonly MudTheme _customTheme = new MudTheme()
+    {
+        PaletteLight = new PaletteLight()
+        {
+            // === Brand & Core Actions ===
+            Primary = "#1E88E5", // Main buttons (<MudButton Color="Color.Primary">), active tabs, primary links
+            Secondary = "#26A69A", // Badges (<MudBadge>), chips, secondary action buttons
+            Tertiary = "#7E57C2", // Accent highlights, special progress indicators
+
+            // === Navigation & Header ===
+            AppbarBackground = "#1565C0", // Top header bar background (<MudAppBar>)
+            AppbarText = "#FFFFFF", // Header titles, header action icons, burger menu button
+            DrawerBackground = "#FFFFFF", // Sidebar navigation panel (<MudDrawer>)
+            DrawerText = "#424242", // Sidebar menu link labels (<MudNavLink>)
+            DrawerIcon = "#616161", // Sidebar menu icons
+
+            // === Layout & Surfaces ===
+            Background = "#F5F5F5", // Main application page background (<MudMainContent>)
+            Surface = "#FFFFFF", // Cards (<MudCard>), dialog modals (<MudDialog>), dropdown menus, papers (<MudPaper>)
+
+            // === Typography ===
+            TextPrimary = "#212121", // Main body paragraphs, page headings, table cell text
+            TextSecondary = "#757575", // Subtitles, input helper text, timestamps, captions
+            TextDisabled = "#BDBDBD", // Disabled button text, disabled form controls
+
+            // === Interactive Elements & Borders ===
+            ActionDefault = "#616161", // General unselected icons, dialog close (X) buttons
+            LinesDefault = "#E0E0E0", // Section dividers (<MudDivider>), card border lines
+            LinesInputs = "#BDBDBD", // Form field borders (<MudTextField>, <MudSelect>)
+            TableLines = "#E0E0E0", // Data table cell borders (<MudTable>, <MudDataGrid>)
+            TableStriped = "#F9F9F9"       // Alternating row background colors in striped tables
+        },
+        PaletteDark = new PaletteDark()
+        {
+            Primary = "#3B82F6",
+            Secondary = "#34D399",
+            AppbarBackground = "#0F172A",
+            Background = "#0B0F19",
+            Surface = "#1E293B",
+            DrawerBackground = "#1E293B"
+        },
+        LayoutProperties = new LayoutProperties()
+        {
+            DefaultBorderRadius = "6px"  // Clean, modern rounded corners on buttons/cards
+        }
+    };
 }
