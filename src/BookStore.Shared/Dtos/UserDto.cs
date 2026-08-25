@@ -9,3 +9,11 @@ public record UserDto(
     [Required(ErrorMessage = "Password is required")]
     string Password
 );
+
+public record AuthResultDto(
+    bool Success,
+    string? Token = null,
+    string? UserName = null,
+    string? Role = null,
+    string? ErrorMessage = null
+);
