@@ -30,6 +30,8 @@ public static class AuthEndpoints
             {
                 return Results.BadRequest("Invalid username or password.");
             }
+            
+            token.Trim('"');
 
             return Results.Ok(token);
         }).AllowAnonymous();   

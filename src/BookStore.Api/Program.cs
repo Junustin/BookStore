@@ -8,9 +8,6 @@ using BookStore.Api;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Microsoft.OpenApi;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -74,12 +71,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapAuthEndpoints();
 app.MapBookEndpoints();
 app.MapOrderEndpoints();
-
-app.UseAuthentication();
-app.UseAuthorization();
 
 // app.UseHttpsRedirection();
 
