@@ -5,6 +5,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
+@attribute [Authorize]
 <MudText Typo="Typo.h5" Class="mb-4">Book Inventory</MudText>
 
 <MudDataGrid Items="@_books" Loading="@_loading" Hover="true" Striped="true">

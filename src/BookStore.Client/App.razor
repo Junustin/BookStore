@@ -1,6 +1,26 @@
-﻿<Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(Pages.NotFound)">
-    <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)"/>
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-    </Found>
-</Router>
+﻿<!-- Passes the AuthenticationState task down the component hierarchy -->
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+        <Found Context="routeData">
+            <!-- Evaluates [Authorize] attributes on pages before rendering -->
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <NotAuthorized>
+                    <!-- Rendered when an unauthenticated user hits a protected page -->
+                    <MudContainer Class="mt-8">
+                        <MudText Typo="Typo.h5" Color="Color.Error">Access Denied</MudText>
+                        <MudText>You must be logged in to access this POS feature.</MudText>
+                    </MudContainer>
+                </NotAuthorized>
+                <Authorizing>
+                    <!-- Rendered while CustomAuthStateProvider evaluates localStorage -->
+                    <MudProgressCircular Indeterminate="true" />
+                </Authorizing>
+            </AuthorizeRouteView>
+        </Found>
+        <NotFound>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <MudText Typo="Typo.h4">Page Not Found</MudText>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
