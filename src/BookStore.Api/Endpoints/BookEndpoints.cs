@@ -25,7 +25,7 @@ public static class BookEndpoints
                b.CreateAt
            ))
            .ToListAsync();
-        });
+        }).RequireAuthorization();
 
         // GET /api/books/{id}
         group.MapGet("/{id}", async (int id, BookStoreDbContext context) =>
